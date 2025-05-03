@@ -1,8 +1,6 @@
-export const calculatePizzas = (people: number): number => {
-	return Math.ceil((3 * people) / 8);
-};
+export const PIZZA = '🍕';
 
-export const pizza = `
+export const PIZZA_ART = `
             88
             ""
 

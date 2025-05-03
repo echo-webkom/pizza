@@ -2,7 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import PizzaFall from '$lib/PizzaFall.svelte';
-	import { calculatePizzas, pizza } from '$lib/pizza';
+	import { PIZZA, PIZZA_ART } from '$lib/pizza';
+	import VirtualList from '@sveltejs/svelte-virtual-list/VirtualList.svelte';
 
 	const COUNT_PARAM = 'count';
 
@@ -27,7 +28,28 @@
 		/**
 		 * Console log the pizza ascii art
 		 */
-		console.log(pizza);
+		console.log(PIZZA_ART);
+	});
+
+	let pizzaWidth = 24;
+	let start = $state();
+	let end = $state();
+	let containerWidth = $state<number>(0);
+
+	const partition = (items: Array<string>, size: number) => {
+		const result = [];
+		for (let i = 0; i < items.length; i += size) {
+			result.push(items.slice(i, i + size));
+		}
+		return result;
+	};
+
+	let items = $derived.by(() => {
+		const emojis = Array.from({ length: count })
+			.fill(null)
+			.map(() => PIZZA);
+		const pizzasPerRow = Math.floor(containerWidth / pizzaWidth);
+		return partition(emojis, pizzasPerRow);
 	});
 </script>
 
@@ -57,15 +79,17 @@
 				placeholder="Antall personer"
 			/>
 
-			<div class="text-2xl">
-				{#if count && count > 0}
-					{@const pizzas = calculatePizzas(count)}
-					<p>
-						{#each Array.from({ length: pizzas }) as _, i}
-							<span>🍕</span>
-						{/each}
-						<span>=</span> <span>{pizzas}</span>
-					</p>
+			<div bind:clientWidth={containerWidth} class="h-[400px]">
+				{#if count > 0}
+					<VirtualList {items} bind:start bind:end>
+						{#snippet children({ item }: { item: Array<string> })}
+							<div class="w-ful h-fit gap-2 flex">
+								{#each item as emoji}
+									<span style="width: {pizzaWidth}px;">{emoji}</span>
+								{/each}
+							</div>
+						{/snippet}
+					</VirtualList>
 				{:else}
 					<p class="text-muted text-xl">Fyll inn antall personer</p>
 				{/if}
